@@ -30,3 +30,4 @@ export const jsScreenStyles = StyleSheet.create({
     height: 21,
   },
 });
+export default jsScreenStyles;

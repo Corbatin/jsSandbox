@@ -10,8 +10,12 @@ import { pyScreenStyles } from "./styles/pyScreen.styles";
 
 export default function pyScreen() {
     const [code, setCode] = useState(
-        `print("Hola mundo y la ctm")`
+        `print("Hola mundo")`
     );
+    const BASE_URL =
+        Platform.OS === "web"
+            ? "http://localhost:3000"
+            : "http://192.168.100.21:3000";
     const PROJECTS_DIR = FileSystem.documentDirectory + "projects/";
     const [logs, setLogs] = useState<string[]>([]);
     const [fileName, setFileName] = useState("untitled.py");
@@ -79,70 +83,68 @@ export default function pyScreen() {
         }
     };
 
-        const runCode = async () => {
-    try {
-        const response = await fetch("http://localhost:3000/execute", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            language: "python",
-            code,
-        }),
-        });
+    const runCode = async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/execute`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    language: "python",
+                    code,
+                }),
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (data.output) {
-        setLogs([data.output]);
-        } else if (data.error) {
-        setLogs(["❌ " + data.error]);
+            if (data.output) {
+                setLogs([data.output]);
+            } else if (data.error) {
+                setLogs(["❌ " + data.error]);
+            }
+        } catch (error) {
+            setLogs(["❌ Error conectando al servidor"]);
         }
-
-    } catch (error) {
-        setLogs(["❌ Error conectando al servidor"]);
-    }
     };
 
+
     return (
-       <View style={{ flex: 1, backgroundColor: '#000022' }}>
+        <View style={{ flex: 1, backgroundColor: '#000022' }}>
 
-      <SafeAreaView style={{ flex: 1 }} >
+            <SafeAreaView style={{ flex: 1 }} >
 
-        <MenuBar
-          fileName={fileName}
-          onRename={setFileName}
-          onClearTerminal={handleClearTerminal}
-          onNewFile={handleNewFile}
-          onSaveFile={handleSaveFile}
-          onOpenFile={handleOpenFile}
-        />
+                <MenuBar
+                    fileName={fileName}
+                    onRename={setFileName}
+                    onClearTerminal={handleClearTerminal}
+                    onNewFile={handleNewFile}
+                    onSaveFile={handleSaveFile}
+                    onOpenFile={handleOpenFile}
+                />
 
 
 
-        {/* Editor */}
-        <View style={{ flex: 1 }}>
-          <MonacoEditor
-            initialCode={code}
-            onCodeChange={setCode}
-          />
+                {/* Editor */}
+                <View style={{ flex: 1 }}>
+                    <MonacoEditor
+                        initialCode={code}
+                        onCodeChange={setCode}
+                    />
+                </View>
+
+                {/* Terminal */}
+                <View style={{ height: 140 }}>
+                    <Terminal logs={logs} />
+                </View>
+
+                <Pressable style={pyScreenStyles.runButton} onPress={runCode}>
+                    <Image
+                        source={require('../assets/images/run_button.png')}
+                        style={pyScreenStyles.img}
+                    />
+                </Pressable>
+
+            </SafeAreaView>
         </View>
-
-        {/* Terminal */}
-        <View style={{ height: 140 }}>
-          <Terminal logs={logs} />
-        </View>
-
-        <Pressable style={pyScreenStyles.runButton} onPress={runCode}>
-          <Image
-            source={require('../assets/images/run_button.png')}
-            style={pyScreenStyles.img}
-          />
-        </Pressable>
-
-      </SafeAreaView>
-    </View>
     )
 
 };

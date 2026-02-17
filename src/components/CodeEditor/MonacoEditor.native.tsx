@@ -24,8 +24,10 @@ export default function MonacoEditor({ code, language, onCodeChange }: Props) {
       height: 100%;
       background: #001242;
       overflow: hidden;
+      zoom:100%;
     }
   </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 </head>
@@ -47,9 +49,10 @@ export default function MonacoEditor({ code, language, onCodeChange }: Props) {
         value: ${JSON.stringify(code)},
         language: '${language}',
         theme: 'vs-dark',
-        fontSize: 18,
+        fontSize: 16,
         automaticLayout: true,
         minimap: { enabled: false }
+        
       });
 
       editor.onDidChangeModelContent(() => {
@@ -94,7 +97,13 @@ export default function MonacoEditor({ code, language, onCodeChange }: Props) {
           }
         }}
         style={{ flex: 1, backgroundColor: '#001242' }}
+        scalesPageToFit={false}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        
       />
+
     </View>
   );
 }
