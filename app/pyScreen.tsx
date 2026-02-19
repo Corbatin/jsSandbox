@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Image, Platform, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MonacoEditor from '../src/components/CodeEditor';
@@ -7,84 +7,102 @@ import MenuBar from '../src/components/MenuBar/MenuBar';
 import Terminal from '../src/components/Terminal';
 import { pyScreenStyles } from "./styles/pyScreen.styles";
 
+export default function PyScreen() {
 
-export default function pyScreen() {
-    const [code, setCode] = useState(
-        `print("Hola mundo")`
-    );
+    const WORKSPACE_DIR = FileSystem.documentDirectory + "workspace/";
+
     const BASE_URL =
         Platform.OS === "web"
             ? "http://localhost:3000"
             : "http://192.168.100.21:3000";
-    const PROJECTS_DIR = FileSystem.documentDirectory + "projects/";
+
+    const [code, setCode] = useState('print("Hola mundo")');
     const [logs, setLogs] = useState<string[]>([]);
     const [fileName, setFileName] = useState("untitled.py");
-    const handleClearTerminal = () => {
-        setLogs([]);
-    };
-    const handleNewFile = () => {
-        setCode('');
-        setFileName('untitled.py');
-        setLogs([]);
-    };
-    const handleOpenFile = async () => {
-        try {
-            if (Platform.OS === 'web') {
-                const content = localStorage.getItem(fileName);
+    const [files, setFiles] = useState<string[]>([]);
 
-                if (!content) {
-                    setLogs(p => [...p, "❌ Archivo no encontrado"]);
-                    return;
-                }
+    // 🔹 Inicializar workspace
+    useEffect(() => {
+        const initWorkspace = async () => {
+            const dirInfo = await FileSystem.getInfoAsync(WORKSPACE_DIR);
 
-                setCode(content);
-                setLogs(p => [...p, "📂 Archivo cargado"]);
-                return;
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(WORKSPACE_DIR, { intermediates: true });
             }
 
-            const PROJECTS_DIR = FileSystem.documentDirectory + "projects/";
-            const fileUri = PROJECTS_DIR + fileName;
+            loadFiles();
+        };
+
+        initWorkspace();
+    }, []);
+
+    // 🔹 Cargar archivos
+    const loadFiles = async () => {
+        try {
+            const fileList = await FileSystem.readDirectoryAsync(WORKSPACE_DIR);
+
+            // Solo mostrar archivos .py
+            const pyFiles = fileList.filter(file => file.endsWith('.py'));
+
+            setFiles(pyFiles);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    // 🔹 Nuevo archivo
+    const handleNewFile = async () => {
+        const newName = "untitled_" + Date.now() + ".py";
+        const fileUri = WORKSPACE_DIR + newName;
+
+        await FileSystem.writeAsStringAsync(fileUri, '');
+
+        setFileName(newName);
+        setCode('');
+        setLogs([]);
+        loadFiles();
+    };
+
+    // 🔹 Guardar archivo
+    const handleSaveFile = async () => {
+        try {
+            const fileUri = WORKSPACE_DIR + fileName;
+
+            await FileSystem.writeAsStringAsync(fileUri, code);
+
+            setLogs(p => [...p, "✅ Archivo guardado"]);
+            loadFiles();
+        } catch (error) {
+            setLogs(p => [...p, "❌ Error guardando archivo"]);
+        }
+    };
+
+    // 🔹 Abrir archivo
+    const handleOpenFile = async (name?: string) => {
+        try {
+            const target = name || fileName;
+            const fileUri = WORKSPACE_DIR + target;
 
             const content = await FileSystem.readAsStringAsync(fileUri);
 
+            setFileName(target);
             setCode(content);
             setLogs(p => [...p, "📂 Archivo cargado"]);
-
         } catch (error) {
             setLogs(p => [...p, "❌ Error abriendo archivo"]);
         }
     };
 
-    const handleSaveFile = async () => {
-        try {
-            if (Platform.OS === 'web') {
-                // 👉 WEB → usar localStorage
-                localStorage.setItem(fileName, code);
-                setLogs(p => [...p, "✅ Archivo guardado en navegador"]);
-                return;
-            }
-
-            // 👉 MOBILE
-            const PROJECTS_DIR = FileSystem.documentDirectory + "projects/";
-
-            const dirInfo = await FileSystem.getInfoAsync(PROJECTS_DIR);
-            if (!dirInfo.exists) {
-                await FileSystem.makeDirectoryAsync(PROJECTS_DIR, { intermediates: true });
-            }
-
-            const fileUri = PROJECTS_DIR + fileName;
-            await FileSystem.writeAsStringAsync(fileUri, code);
-
-            setLogs(p => [...p, "✅ Archivo guardado en dispositivo"]);
-
-        } catch (error: any) {
-            setLogs(p => [...p, "❌ Error guardando archivo"]);
-            console.error(error);
-        }
+    // 🔹 Limpiar terminal
+    const handleClearTerminal = () => {
+        setLogs([]);
     };
 
+    // 🔹 Ejecutar Python
     const runCode = async () => {
         try {
+            setLogs(["⏳ Ejecutando..."]);
+
             const response = await fetch(`${BASE_URL}/execute`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -106,11 +124,9 @@ export default function pyScreen() {
         }
     };
 
-
     return (
         <View style={{ flex: 1, backgroundColor: '#000022' }}>
-
-            <SafeAreaView style={{ flex: 1 }} >
+            <SafeAreaView style={{ flex: 1 }}>
 
                 <MenuBar
                     fileName={fileName}
@@ -118,12 +134,11 @@ export default function pyScreen() {
                     onClearTerminal={handleClearTerminal}
                     onNewFile={handleNewFile}
                     onSaveFile={handleSaveFile}
-                    onOpenFile={handleOpenFile}
+                    onOpenFile={() => handleOpenFile()}
+                    files={files}
+                    onSelectFile={handleOpenFile}
                 />
 
-
-
-                {/* Editor */}
                 <View style={{ flex: 1 }}>
                     <MonacoEditor
                         initialCode={code}
@@ -131,7 +146,6 @@ export default function pyScreen() {
                     />
                 </View>
 
-                {/* Terminal */}
                 <View style={{ height: 140 }}>
                     <Terminal logs={logs} />
                 </View>
@@ -145,6 +159,5 @@ export default function pyScreen() {
 
             </SafeAreaView>
         </View>
-    )
-
-};
+    );
+}

@@ -38,3 +38,4 @@ export const indexStyles = StyleSheet.create({
     fontFamily: 'Helvetica'
   }
 });
+export default indexStyles;

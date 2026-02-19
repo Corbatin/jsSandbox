@@ -17,6 +17,8 @@ type MenuBarProps = {
   onNewFile: () => void;
   onSaveFile: () => void;
   onOpenFile: () => void;
+  files: string[];
+  onSelectFile: (name: string) => void;
 };
 
 export default function MenuBar({
@@ -25,7 +27,10 @@ export default function MenuBar({
   onRename,
   onNewFile,
   onSaveFile,
-  onOpenFile
+  onOpenFile,
+  files,
+  onSelectFile
+
 }: MenuBarProps) {
 
   const [isVisible, setIsVisible] = useState(false);
@@ -92,53 +97,101 @@ export default function MenuBar({
           </Pressable>
         </View>
       </View>
+      {open && (
+        <Pressable
+          style={MenuBarStyles.drawerOverlay}
+          onPress={toggleMenu}
+        />
+      )}
 
-      {/* 📂 Menú lateral */}
       <Animated.View
         style={[
-          {
-            position: 'absolute',
-            top: 56,
-            left: 0,
-            width: 250,
-            backgroundColor: darkTheme.border,
-            zIndex: 1000,
-
-          },
+          MenuBarStyles.drawerContainer,
           { transform: [{ translateX: slideX }] },
         ]}
       >
-        <Pressable style={MenuBarStyles.pressed} onPress={() => {
-          toggleMenu();
-          onNewFile();
-        }}>
-          <Text style={MenuBarStyles.menuText}>Nuevo Archivo</Text>
-        </Pressable>
+        <View style={MenuBarStyles.drawerContent}>
 
-        <Pressable style={MenuBarStyles.pressed} onPress={() => {
-          toggleMenu();
-          onOpenFile();
-        }}>
-          <Text style={MenuBarStyles.menuText}>Abrir Archivo</Text>
-        </Pressable>
+          {/* 🔹 Sección superior */}
+          <View style={MenuBarStyles.drawerTopSection}>
 
-        <Pressable style={MenuBarStyles.pressed} onPress={() => {
-          toggleMenu();
-          onSaveFile();
-        }} >
-          <Text style={MenuBarStyles.menuText}>Guardar Archivo</Text>
-        </Pressable>
+            <Pressable style={MenuBarStyles.pressed} onPress={() => {
+              toggleMenu();
+              onNewFile();
+            }}>
+              <Text style={MenuBarStyles.menuText}>Nuevo Archivo</Text>
+            </Pressable>
 
-        <Pressable
-          style={MenuBarStyles.pressed}
-          onPress={() => {
-            toggleMenu();
-            onClearTerminal();
-          }}
-        >
-          <Text style={MenuBarStyles.menuText}>Limpiar Terminal</Text>
-        </Pressable>
+            <Pressable style={MenuBarStyles.pressed} onPress={() => {
+              toggleMenu();
+              onOpenFile();
+            }}>
+              <Text style={MenuBarStyles.menuText}>Abrir Archivo</Text>
+            </Pressable>
+
+            <Pressable style={MenuBarStyles.pressed} onPress={() => {
+              toggleMenu();
+              onSaveFile();
+            }}>
+              <Text style={MenuBarStyles.menuText}>Guardar Archivo</Text>
+            </Pressable>
+
+            <Pressable
+              style={MenuBarStyles.pressed}
+              onPress={() => {
+                toggleMenu();
+                onClearTerminal();
+              }}
+            >
+              <Text style={MenuBarStyles.menuText}>Limpiar Terminal</Text>
+            </Pressable>
+
+          </View>
+
+          {/* 🔹 Sección inferior */}
+          <View>
+            <View style={MenuBarStyles.drawerDivider} />
+
+            <View style={MenuBarStyles.drawerBottomSection}>
+              <Text style={MenuBarStyles.drawerSectionTitle}>
+                Workspace
+              </Text>
+
+              {files.length === 0 && (
+                <Text style={{ color: "#777", fontSize: 12 }}>
+                  No hay archivos
+                </Text>
+              )}
+
+              {files.map((file) => (
+                <Pressable
+                  key={file}
+                  style={[
+                    MenuBarStyles.openFileItem,
+                    file === fileName && { backgroundColor: "#1a1a3a" }
+                  ]}
+                  onPress={() => {
+                    toggleMenu();
+                    onSelectFile(file);
+                  }}
+                >
+                  <Text
+                    style={[
+                      MenuBarStyles.openFileText,
+                      file === fileName && { color: "#4da6ff" }
+                    ]}
+                  >
+                    {file}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+
+        </View>
       </Animated.View>
+
 
       {/* 🪟 Modal */}
       <Modal visible={isVisible} transparent animationType="fade">

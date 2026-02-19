@@ -58,7 +58,8 @@ export const MenuBarStyles = StyleSheet.create({
   },
 
   pressed: {
-
+    backgroundColor: darkTheme.border,
+    
   },
 
   menuText: {
@@ -115,4 +116,70 @@ export const MenuBarStyles = StyleSheet.create({
     marginVertical:10,
     borderRadius:50
   },
+
+  // 🔹 Drawer principal
+  drawerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: 260,
+    backgroundColor: darkTheme.border,
+    zIndex: 1000,
+    paddingTop: 15,
+  },
+
+  drawerContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+
+  // 🔹 Sección superior (acciones)
+  drawerTopSection: {
+    paddingHorizontal: 10,
+  },
+
+  // 🔹 Separador
+  drawerDivider: {
+    height: 1,
+    backgroundColor: '#333',
+    marginVertical: 15,
+    marginHorizontal: 10,
+  },
+
+  // 🔹 Sección inferior (archivos abiertos)
+  drawerBottomSection: {
+    paddingHorizontal: 15,
+    paddingBottom: 20,
+  },
+
+  drawerSectionTitle: {
+    color: '#888',
+    fontSize: 12,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+
+  openFileItem: {
+    paddingVertical: 6,
+  },
+
+  openFileText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+
+  // 🔹 Overlay oscuro
+  drawerOverlay: {
+    position: 'absolute',
+    top: 56,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 999,
+  },
+
 });
+export default MenuBarStyles;

@@ -30,3 +30,4 @@ export const pyScreenStyles = StyleSheet.create({
     height: 21,
   },
 });
+export default pyScreenStyles ;
